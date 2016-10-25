@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+	attribute  vec4 vPosition;
+	attribute  vec3 vNormal;
+	attribute  vec4 vColor;
+	attribute  vec2 vTextureCoord;
+	
+	varying vec4 fColor;
+	varying vec2 fTextureCoord;
+
+	uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+	uniform mat4 modelViewMatrix;
+	uniform mat4 projectionMatrix;
+	uniform vec4 lightPosition;
+	uniform float shininess;
+
+	void main()
+	{
+	    vec3 pos = (modelViewMatrix * vPosition).xyz;
+	    vec3 light = (modelViewMatrix * lightPosition).xyz;
+	    //vec3 light = lightPosition.xyz;
+	    vec3 L = normalize( light - pos );
+
+	    vec3 E = normalize( -pos );
+	    vec3 H = normalize( L + E );
+	    
+	    vec4 NN = vec4(vNormal,0);
+
+	    // Transform vertex normal into eye coordinates
+	       
+	    vec3 N = normalize( (modelViewMatrix*NN).xyz);
+
+	    // Compute terms in the illumination equation
+	    vec4 ambient = ambientProduct;
+
+	    float Kd = max( dot(L, N), 0.0 );
+	    vec4  diffuse = Kd*diffuseProduct;
+
+	    float Ks = pow( max(dot(N, H), 0.0), shininess );
+	    vec4  specular = Ks * specularProduct;
+	    
+	    if( dot(L, N) < 0.0 ) {
+			specular = vec4(0.0, 0.0, 0.0, 1.0);
+	    } 
+
+	    gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+	    fColor = vColor + ambient + diffuse + specular;
+	    fTextureCoord = vTextureCoord;
+		
+	    fColor.a = 1.0;
+	}
+</script>
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+	precision mediump float;
+	varying vec4 fColor;
+	varying vec2 fTextureCoord;
+	uniform sampler2D texture;
+	
+	void main(){
+	  //gl_FragColor = fColor;
+	  gl_FragColor = fColor*texture2D(texture, fTextureCoord);
+	}
+
+</script>
+
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="generatepoints.js"></script>
+<script type="text/javascript" src="charlesharvin.js"></script>
+
+<body>
+	
+<canvas id="gl-canvas" oncontextmenu="return false;" style="cursor: grabbing;" width="830" height="512">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+<p> </p>
+Press 'p' to start
+<p> </p>
+Score: <span id="score">0</span><p> </p>
+<button id = "thetaup">Increase theta</button>
+<button id = "thetadown">Decrease theta</button>
+<button id = "phiup">Increase phi</button>
+<button id = "phidown">Decrease phi</button>
+<p> </p>
+'s' to shoot, 'p' to pause music, 'a' to stop animation<p> </p>
+Hold left or right arrow to move the gun<p></p>
+------------------------------<p></p>
+Hold and move LMB to rotate<p> </p>
+Hold and move RMB to pan<p> </p>
+Scroll wheel to zoom<p> </p>
+
+</body>
+</html>
